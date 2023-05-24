@@ -251,22 +251,41 @@ class AFN:
                             selfnodo.camino += f'--{selfnodo.cadena[0]}-->//'
                     else:
                         selfnodo.camino += f'--{selfnodo.cadena[0]}-->//'
+            
+            def imprimirCaminos(selfnodo):
+                if selfnodo.next == []:
+                    if '//' in selfnodo.camino:
+                        print(f'{selfnodo.camino} : abortado')
+                    else:
+                        if selfnodo.estado in self.estadosAceptacion:
+                            print(f'{selfnodo.camino} : aceptacion')
+                            return [['ac',selfnodo.camino]]
+                        else:
+                            print(f'{selfnodo.camino} : rechazo')
+                            return [['re',selfnodo.camino]]
+                    return [['ab',selfnodo.camino]]
+                else:
+                    caminos = []
+                    for siguienteNodo in selfnodo.next:
+                        caminos += siguienteNodo.imprimirCaminos()
+                    return caminos
         
         inicio = nodo(estado = self.estadoInicial[0], cadena = cadena, camino = self.estadoInicial[0])
-        
-        def imprimirCaminos(nodoActual = inicio):
-            if nodoActual.next == []:
-                if '//' in nodoActual.camino:
-                    print(f'procesamiento abortado: {nodoActual.camino}')
-                else:
-                    if nodoActual.estado in self.estadosAceptacion:
-                        print(f'cadena aceptada: {nodoActual.camino}')
-                    else:
-                        print(f'cadena NO aceptada: {nodoActual.camino}')
-            else:
-                for siguienteNodo in nodoActual.next:
-                    imprimirCaminos(siguienteNodo)
-        imprimirCaminos(nodoActual=inicio) 
+        caminos = inicio.imprimirCaminos()
+        archivoAceptadas =  open(f'{nombreArchivo}Aceptadas.txt','w')
+        archivoRechazadas = open(f'{nombreArchivo}Rechazadas.txt','w')
+        archivoAbortadas = open(f'{nombreArchivo}Abortadas.txt','w')
+        for camino in caminos:
+            if camino[0] == 'ac':
+                archivoAceptadas.write(f"{camino[1]} \n")
+            elif camino[0] == 're':
+                archivoRechazadas.write(f"{camino[1]} \n")
+            elif camino[0] == 'ab':
+                archivoAbortadas.write(f"{camino[1]} \n")
+        archivoAceptadas.close()
+        archivoRechazadas.close()
+        archivoAbortadas.close()
+        return caminos.__len__()
         
 afn1 = AFN(nombreArchivo='testAFN.NFA')
-afn1.computarTodosLosProcesamientos(cadena='aaabb')
+print(afn1.computarTodosLosProcesamientos(cadena='aaabb'))
