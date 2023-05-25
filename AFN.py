@@ -218,60 +218,24 @@ class AFN:
 
     
     def procesar_cadena_con_detalles(self, cadena = ''):
-        estadosActuales = self.estadoInicial
-        for caracter in cadena:
-            siguientesEstados = []
-            for estadoActual in estadosActuales:
-                if estadoActual in self.delta:
-                    if caracter in self.delta[estadoActual]:
-                        siguientesEstados += self.delta[estadoActual][caracter]
-            print(f'{estadosActuales}--{caracter}-->{siguientesEstados}')
-            if siguientesEstados == []:
-                return False
-            estadosActuales = siguientesEstados
+        inicio = nodo(estado = self.estadoInicial[0], cadena = cadena, camino = self.estadoInicial[0])
+        self.generarCaminos(nodoActual= inicio)
+        
+        caminos = self.obtenerCaminos(nodoActual= inicio)
         aceptacion = False
-        for estado in estadosActuales:
-            if estado in self.estadosAceptacion:
+        for camino in caminos:
+            if camino[0] == 'ac':
                 aceptacion = True
+                print(camino[1])
+        if aceptacion == False:
+            print('La cadena no es aceptada')
         return aceptacion
 
     def computarTodosLosProcesamientos(self, cadena='', nombreArchivo=''): 
-        class nodo:
-            def __init__(selfnodo, estado = None, cadena = '', camino = ''):
-                selfnodo.estado = estado
-                selfnodo.cadena = cadena
-                selfnodo.next = []
-                selfnodo.camino = camino
-                if selfnodo.cadena != '':
-                    if selfnodo.estado in self.delta:
-                        if selfnodo.cadena[0] in self.delta[selfnodo.estado]:
-                            for estadoTransicionado in  self.delta[selfnodo.estado][selfnodo.cadena[0]]:
-                                selfnodo.next.append(nodo(estado = estadoTransicionado, cadena = selfnodo.cadena[1:], camino = selfnodo.camino+f'--{selfnodo.cadena[0]}--->{estadoTransicionado}'))
-                        else:
-                            selfnodo.camino += f'--{selfnodo.cadena[0]}-->//'
-                    else:
-                        selfnodo.camino += f'--{selfnodo.cadena[0]}-->//'
-            
-            def imprimirCaminos(selfnodo):
-                if selfnodo.next == []:
-                    if '//' in selfnodo.camino:
-                        print(f'{selfnodo.camino} : abortado')
-                    else:
-                        if selfnodo.estado in self.estadosAceptacion:
-                            print(f'{selfnodo.camino} : aceptacion')
-                            return [['ac',selfnodo.camino]]
-                        else:
-                            print(f'{selfnodo.camino} : rechazo')
-                            return [['re',selfnodo.camino]]
-                    return [['ab',selfnodo.camino]]
-                else:
-                    caminos = []
-                    for siguienteNodo in selfnodo.next:
-                        caminos += siguienteNodo.imprimirCaminos()
-                    return caminos
-        
         inicio = nodo(estado = self.estadoInicial[0], cadena = cadena, camino = self.estadoInicial[0])
-        caminos = inicio.imprimirCaminos()
+        self.generarCaminos(nodoActual= inicio)
+        
+        caminos = self.obtenerCaminos(nodoActual= inicio, imprimir=True)
         archivoAceptadas =  open(f'{nombreArchivo}Aceptadas.txt','w')
         archivoRechazadas = open(f'{nombreArchivo}Rechazadas.txt','w')
         archivoAbortadas = open(f'{nombreArchivo}Abortadas.txt','w')
@@ -286,6 +250,47 @@ class AFN:
         archivoRechazadas.close()
         archivoAbortadas.close()
         return caminos.__len__()
-        
+    
+    def generarCaminos(self, nodoActual = None):
+        if nodoActual.cadena != '':
+            if nodoActual.estado in self.delta:
+                if nodoActual.cadena[0] in self.delta[nodoActual.estado]:
+                    for estadoTransicionado in  self.delta[nodoActual.estado][nodoActual.cadena[0]]:
+                        nodoActual.next.append(nodo(estado = estadoTransicionado, cadena = nodoActual.cadena[1:], camino = nodoActual.camino+f'--{nodoActual.cadena[0]}-->{estadoTransicionado}'))
+                    for nodoSiguiente in nodoActual.next:
+                        self.generarCaminos(nodoSiguiente)    
+                else:
+                    nodoActual.camino += f'--{nodoActual.cadena[0]}-->//'
+            else:
+                nodoActual.camino += f'--{nodoActual.cadena[0]}-->//'
+
+    def obtenerCaminos(self, nodoActual = None, imprimir = False):
+        if nodoActual.next == []:
+            if '//' in nodoActual.camino:
+                if imprimir:
+                    print(f'{nodoActual.camino} : abortado')
+                return [['ab',nodoActual.camino]]
+            else:
+                if nodoActual.estado in self.estadosAceptacion:
+                    if imprimir:
+                        print(f'{nodoActual.camino} : aceptacion')
+                    return [['ac',nodoActual.camino]]
+                else:
+                    if imprimir:
+                        print(f'{nodoActual.camino} : rechazo')
+                    return [['re',nodoActual.camino]]
+        else:
+            caminos = []
+            for siguienteNodo in nodoActual.next:
+                caminos += self.obtenerCaminos(nodoActual=siguienteNodo, imprimir=imprimir)
+            return caminos
+
+class nodo:
+    def __init__(selfnodo, estado = None, cadena = '', camino = ''):
+        selfnodo.estado = estado
+        selfnodo.cadena = cadena
+        selfnodo.next = []
+        selfnodo.camino = camino
 afn1 = AFN(nombreArchivo='testAFN.NFA')
-print(afn1.computarTodosLosProcesamientos(cadena='aaabb'))
+print(afn1.procesar_cadena_con_detalles('aaaaaa'))
+print(afn1.computarTodosLosProcesamientos(cadena='aaaaaa', nombreArchivo='Segundo prueba'))
