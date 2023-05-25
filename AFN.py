@@ -291,6 +291,7 @@ class nodo:
         selfnodo.cadena = cadena
         selfnodo.next = []
         selfnodo.camino = camino
-afn1 = AFN(nombreArchivo='testAFN.NFA')
-print(afn1.procesar_cadena_con_detalles('aaaaaa'))
-print(afn1.computarTodosLosProcesamientos(cadena='aaaaaa', nombreArchivo='Segundo prueba'))
+
+# afn1 = AFN(nombreArchivo='testAFN.NFA')
+# print(afn1.procesar_cadena_con_detalles('aaaaaa'))
+# print(afn1.computarTodosLosProcesamientos(cadena='aaaaaa', nombreArchivo='Segundo prueba'))
