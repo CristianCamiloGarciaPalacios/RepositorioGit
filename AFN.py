@@ -339,6 +339,18 @@ class AFN:
                 print(textoDeCadena)
         archivo.close()
 
+    def procesarCadenaConversion(self, cadena = ''):
+        afd = self.AFNtoAFD()
+        return afd.procesar_cadena(cadena=cadena)
+
+    def procesarCadenaConDetallesConversion(self, cadena = ''):
+        afd = self.AFNtoAFD()
+        return afd.procesar_cadena_con_detalles(cadena=cadena)
+
+    def procesarListaCadenasConversion(self, listaCadenas = [], nombreArchivo = '', imprimirPantalla = False):
+        afd = self.AFNtoAFD()
+        afd.procesarListaCadenas(listaCadenas=listaCadenas, nombreArchivo=nombreArchivo, imprimirPantalla=imprimirPantalla)
+
     class nodo:
         def __init__(selfnodo, estado = None, cadena = '', camino = ''):
             selfnodo.estado = estado
@@ -349,4 +361,4 @@ class AFN:
 afn1 = AFN(nombreArchivo='testAFN.NFA')
 # print(afn1.procesar_cadena_con_detalles(''))
 # print(afn1.computarTodosLosProcesamientos(cadena=''))
-afn1.procesarListaCadenas(listaCadenas = ['', 'aba', 'aaaaaaaaaaa', 'b'], imprimirPantalla = True)
+# afn1.procesarListaCadenas(listaCadenas = ['', 'aba', 'aaaaaaaaaaa', 'b'], imprimirPantalla = True)
