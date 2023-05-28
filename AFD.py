@@ -1,3 +1,5 @@
+# from graphviz import Digraph
+
 class AFD:
     def __init__(self, alfabeto=None, estados=None, estadoInicial=None, estadosAceptacion=None, delta=None, nombreArchivo=None):
         if nombreArchivo:
@@ -11,27 +13,31 @@ class AFD:
             self.delta = delta
             self.estadosLimbo = []
             self.estadosInaccesibles = []
+
+        #self.verificarCorregirCompletitud()
             
 
     def __str__(self):
         output = "!DFA\n"
+
         output += "#alphabet\n"
         start = min(self.alfabeto)
         end = max(self.alfabeto)
         output += f"{start}-{end}\n"
+
         output += "#states\n"
         estados_str = [str(estado) for estado in self.estados]
         output += "\n".join(estados_str) + "\n"
         
 
         output += "#initial\n"
-        estadoInicial_str = [str(estado) for estado in self.estadoInicial]
-        output += "\n".join(estadoInicial_str) + "\n"
+        output += str(self.estadoInicial) + "\n"
 
 
         output += "#accepting\n"
         estadosAceptacion_str = [str(estado) for estado in self.estadosAceptacion]  
         output += "\n".join(estadosAceptacion_str) + "\n"
+
         output += "#transitions\n"
         for source, transitions in self.delta.items():
             for letter, target in transitions.items():
@@ -43,21 +49,30 @@ class AFD:
         output += "\n".join(sorted(self.estadosLimbo)) + "\n"
 
         return output
-
+    
     def imprimirAFDSimplificado(self):
         output = "!DFA\n"  
         output += "#states\n"
-        output += "\n".join(sorted(self.estados)) + "\n" 
+        
+        estados_no_limbo = [estado for estado in self.estados if estado not in self.estadosLimbo]
+        output += "\n".join(sorted(estados_no_limbo)) + "\n" 
+
         output += "#initial\n"
-        output += str(self.estadoInicial[0]) + "\n"
+        output += str(self.estadoInicial) + "\n"
+
         output += "#accepting\n"
-        output += "\n".join(sorted(self.estadosAceptacion)) + "\n"
+        estados_aceptacion_no_limbo = [estado for estado in self.estadosAceptacion if estado not in self.estadosLimbo]
+        output += "\n".join(sorted(estados_aceptacion_no_limbo)) + "\n"
+
         output += "#transitions\n"
         for source, transitions in self.delta.items():
-            for letter, target in transitions.items():
-                output += f"{source}:{letter}>{target}\n"
+            if source not in self.estadosLimbo:
+                for letter, target in transitions.items():
+                    if target != 'limbo':
+                        output += f"{source}:{letter}>{target}\n"
         
         return output
+
 
         
     def verificarCorregirCompletitud(self):
@@ -87,19 +102,12 @@ class AFD:
                     if self.delta[estado][transicion] in self.estadosInaccesibles:
                         self.estadosInaccesibles.remove(self.delta[estado][transicion])
         return self.estadosInaccesibles
-
-
-    # def hallarEstadosInaccesibles(self):
-    #     self.estadosInaccesibles = self.estados.copy()
-    #     self.estadosInaccesibles.remove(self.estadoInicial[0])
-    #     for estado in self.estados:
-    #         if estado in self.delta:
-    #             for transicion in self.delta[estado]:
-    #                 if self.delta[estado][transicion] in self.estadosInaccesibles:
-    #                     self.estadosInaccesibles.remove(self.delta[estado][transicion])
-    #     return self.estadosInaccesibles
-
-
+    
+    def eliminar_estados_inaccesibles(self):
+        inaccesibles = self.hallarEstadosInaccesibles()
+        self.estados = [state for state in self.estados if state not in inaccesibles]
+        self.estadosAceptacion = [state for state in self.estadosAceptacion if state not in inaccesibles]
+        self.delta = {state: transitions for state, transitions in self.delta.items() if state not in inaccesibles}
 
 
     def cargar_desde_archivo(self, nombreArchivo):
@@ -149,58 +157,58 @@ class AFD:
 
     def procesar_cadena(self, cadena):
         estadoActual = self.estadoInicial
-        for simbolo in cadena:
+        for simbolo in cadena: # convertir lista a tupla
             if estadoActual not in self.delta:
-                raise KeyError(f"State '{estadoActual}' is not in the DFA's transition function")
-            estadoActual = self.delta[estadoActual][simbolo]
-        return estadoActual in self.estadosAceptacion
+                return False
+            estadoActual = self.delta[estadoActual][simbolo] # convertir tupla de vuelta a lista
+        return estadoActual in self.estadosAceptacion  # convertir a tupla antes de chequear
+
     
     def procesar_cadena_con_detalles(self, cadena):
         estadoActual = self.estadoInicial
-
-        for simbolo in cadena:
+        for simbolo in cadena: # convertir lista a tupla
+            if estadoActual not in self.delta:
+                return False
             print(f"{estadoActual},{simbolo} --> {self.delta[estadoActual][simbolo]}")
-            estadoActual = self.delta[estadoActual][simbolo]
-
-        return estadoActual in self.estadosAceptacion
+            estadoActual = self.delta[estadoActual][simbolo] # convertir tupla de vuelta a lista
+        return estadoActual in self.estadosAceptacion  # convertir a tupla antes de chequear
     
     def procesar_cadena_con_detalles_print(self, cadena):
         estadoActual = self.estadoInicial
         procesamiento = f"{estadoActual}"
         for simbolo in cadena:
+            if estadoActual not in self.delta:
+                return False
             procesamiento += f",{simbolo} --> {self.delta[estadoActual][simbolo]}"
             estadoActual = self.delta[estadoActual][simbolo]
         return procesamiento 
     
-# procesarListaCadenas(listaCadenas,nombreArchivo, imprimirPantalla): procesa
-# cada cadenas con detalles pero los resultados deben ser impresos en un archivo
-# cuyo nombre es nombreArchivo; si este es inválido se asigna un nombre por
-# defecto. Además, todo esto debe ser impreso en pantalla de acuerdo al valor del
-# Booleano imprimirPantalla. Los campos deben estar separados por tabulación y
-# son:
-# ▪ cadena,
-# ▪ sucesión de parejas (estado, símbolo) de cada paso del procesamiento .
-# ▪ sí o no dependiendo de si la cadena es aceptada o no.
-
     def procesarListaCadenas(self, listaCadenas, nombreArchivo, imprimirPantalla):
-        # Verify if the filename is valid, otherwise assign a default name
         if not nombreArchivo or not nombreArchivo.strip():
             nombreArchivo = "resultados.txt"
 
-        # Process each cadena in the list
+        contador_si = 0  # Contador para los "si"
+        contador_no = 0  # Contador para los "no"
+
         with open(nombreArchivo, 'w') as archivo:
             for cadena in listaCadenas:
-                detalles = self.procesar_cadena_con_detalles_print(cadena)  # Assuming self.procesarCadena() is the method for processing each cadena
+                detalles = self.procesar_cadena_con_detalles_print(cadena)  
+                resultado = "si" if self.procesar_cadena(cadena=cadena) else "no"
 
-                resultado = "si" if detalles else "no"  # Update the logic here based on the expected result
+                if resultado == "si":
+                    contador_si += 1
+                else:
+                    contador_no += 1
+
                 linea = f"{cadena}\t{detalles}\t{resultado}"
-
-                # Write to the file
                 archivo.write(linea + '\n')
 
-                # Print to the screen if indicated
                 if imprimirPantalla:
                     print(linea)
+        print(f"Conteo 'si': {contador_si}")
+        print(f"Conteo 'no': {contador_no}")
+            
+
 
     def hallarComplemento(self):
         complemento = AFD()  
@@ -259,7 +267,7 @@ class AFD:
 
         return producto_cartesiano
     
-    def hallarProductoCartesianoDiferencia(self, afd1, afd2):
+    def hallarProductoCartesianoDiferenciaSimetrica(self, afd1, afd2):
         producto_cartesiano = AFD()  
 
         producto_cartesiano.alfabeto = afd1.alfabeto
@@ -288,6 +296,106 @@ class AFD:
         elif operacion == 'union':
             return self.hallarProductoCartesianoO(afd1,afd2)
         elif operacion == 'diferencia':
-            return self.hallarProductoCartesianoDiferencia(afd1,afd2)
+            return self.hallarProductoCartesianoDiferenciaSimetrica(afd1,afd2)
         else:
             print("Operacion no valida")
+
+
+    # def draw(self):
+    #     dfa = Digraph()
+
+    #     for estado in self.estados:
+    #         if estado in self.estadosAceptacion:
+    #             dfa.attr('node', shape='doublecircle')
+    #         else:
+    #             dfa.attr('node', shape='circle')
+    #         dfa.node(str(estado))
+
+    #     dfa.attr('node', shape='ellipse')
+
+    #     for source, transicion in self.delta.items():
+    #         for symbol, target in transicion.items():
+    #             if target not in self.estadosLimbo:
+    #                 dfa.edge(str(source), str(target), label=str(symbol))
+
+    #     dfa.attr('node', style='invis', width='0')
+    #     dfa.node('start')
+    #     dfa.edge('start', str(self.estadoInicial), style='bold')
+
+    #     return dfa
+    
+    def combinar_estados(self, states):
+        return ','.join(sorted(states))
+
+    def simplificarAFD(self):
+        self.eliminar_estados_inaccesibles()
+
+        # Inicializar tabla triangular con todos los pares de estados
+        tabla = {frozenset({p, q}): False for p in self.estados for q in self.estados if p != q}
+
+        # Marcar con 'X' si un estado es un estado de aceptación y el otro no lo es
+        for par in tabla:
+            p, q = list(par)
+            tabla[par] = (p in self.estadosAceptacion and q not in self.estadosAceptacion) or \
+                        (q in self.estadosAceptacion and p not in self.estadosAceptacion)
+
+        while True:
+            nueva_tabla = tabla.copy()
+            for par in tabla:
+                if not tabla[par]:
+                    p, q = list(par)
+                    for a in self.alfabeto:
+                        if self.delta[p][a] != self.delta[q][a] and \
+                        tabla[frozenset({self.delta[p][a], self.delta[q][a]})]:
+                            nueva_tabla[par] = True
+                            break
+
+            if nueva_tabla == tabla:
+                break
+            else:
+                tabla = nueva_tabla
+
+        # Combinar estados equivalentes
+        clusters = []
+        for par in tabla:
+            if not tabla[par]:
+                encontrado = False
+                for cluster in clusters:
+                    if par.issubset(cluster):
+                        encontrado = True
+                        break
+                    if par.intersection(cluster):
+                        cluster.update(par)
+                        encontrado = True
+                        break
+                if not encontrado:
+                    clusters.append(set(par))
+
+        # Agregar estados que no aparecieron en ningún par a los clusters
+        todos_los_estados_en_pares = set().union(*clusters)
+        for estado in self.estados:
+            if estado not in todos_los_estados_en_pares:
+                clusters.append({estado})
+
+        # Crear nuevo AFD con estados combinados
+        nuevo_delta = {}
+        for cluster in clusters:
+            estado_combinado = self.combinar_estados(cluster)
+            transiciones_combinadas = {}
+            for a in self.alfabeto:
+                proximo_estado = self.delta[next(iter(cluster))][a]
+                for proximo_cluster in clusters:
+                    if proximo_estado in proximo_cluster:
+                        transiciones_combinadas[a] = self.combinar_estados(proximo_cluster)
+                        break
+            nuevo_delta[estado_combinado] = transiciones_combinadas
+
+        self.estados = [self.combinar_estados(cluster) for cluster in clusters]
+        self.delta = nuevo_delta
+
+        # Actualizar los estados inicial y de aceptación con sus nuevos nombres
+        for cluster in clusters:
+            if self.estadoInicial in cluster:
+                self.estadoInicial = self.combinar_estados(cluster)
+            if any(estado in self.estadosAceptacion for estado in cluster):
+                self.estadosAceptacion = [self.combinar_estados(cluster) for cluster in clusters if any(estado in self.estadosAceptacion for estado in cluster)]

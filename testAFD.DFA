@@ -1,6 +1,6 @@
-#!NFA
+!DFA
 #alphabet
-a-b
+a-d
 #states
 s0
 s1
@@ -10,11 +10,12 @@ s4
 #initial
 s0
 #accepting
-s3
+s0
+s1
 #transitions
+s0:b>s1
 s0:a>s1
-s1:a>s1;s3
-s1:b>s2
-s2:a>s3
-s2:b>s2
-s4:a>s4
+s1:a>s0
+s1:b>s0
+
+

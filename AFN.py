@@ -130,7 +130,7 @@ class AFN:
 
     def AFNtoAFD(self, imprimirTabla=True):
         estadosAFD = []
-        estadoInicialAFD = ['{'+self.estadoInicial[0]+'}']
+        estadoInicialAFD = '{'+self.estadoInicial[0]+'}'
         deltaAFD = {}
         estadosAceptacionAFD = []
 
@@ -153,8 +153,7 @@ class AFN:
                             strTransicion += elemento+','
                         strTransicion = strTransicion.rstrip(',')
                         deltaAFD[estado][caracter] = strTransicion
-                        if not strTransicion in estadosAFD:
-                            # if not strTransicion in estadosAFD and strTransicion != '':
+                        if not strTransicion in estadosAFD and strTransicion != '':
                             estadosAFD.append(strTransicion)
             if copiaEstadosAFD == estadosAFD:
                 break
@@ -295,8 +294,9 @@ class AFN:
             return caminos
 
     def procesarListaCadenas(self, listaCadenas=[], nombreArchivo='', imprimirPantalla=False):
-        # nombre invalido ??
         archivo = open(f'{nombreArchivo}.txt', 'w')
+        contador_si = 0  # Contador para los "si"
+        contador_no = 0
         for cadena in listaCadenas:
             textoDeCadena = ''
             textoDeCadena += f'{cadena}\n'
@@ -336,24 +336,29 @@ class AFN:
 
             if numeroDeProcesamientosDeAceptacion == 0:
                 textoDeCadena += 'no\n'
+                contador_no += 1
             else:
                 textoDeCadena += 'si\n'
-
+                contador_si += 1
             archivo.write(textoDeCadena)
             if imprimirPantalla:
                 print(textoDeCadena)
+                print('------------------------')
+                print(f"Conteo 'si': {contador_si}")
+                print(f"Conteo 'no': {contador_no}")
         archivo.close()
+        return contador_si, contador_no
 
     def procesarCadenaConversion(self, cadena=''):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         return afd.procesar_cadena(cadena=cadena)
 
     def procesarCadenaConDetallesConversion(self, cadena=''):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         return afd.procesar_cadena_con_detalles(cadena=cadena)
 
     def procesarListaCadenasConversion(self, listaCadenas=[], nombreArchivo='', imprimirPantalla=False):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         afd.procesarListaCadenas(
             listaCadenas=listaCadenas, nombreArchivo=nombreArchivo, imprimirPantalla=imprimirPantalla)
 
@@ -364,8 +369,6 @@ class AFN:
             selfnodo.next = []
             selfnodo.camino = camino
 
-
-# afn1 = AFN(nombreArchivo='testAFN.NFA')
-# print(afn1.procesar_cadena_con_detalles(''))
-# print(afn1.computarTodosLosProcesamientos(cadena=''))
-# afn1.procesarListaCadenas(listaCadenas = ['', 'aba', 'aaaaaaaaaaa', 'b'], imprimirPantalla = True)
+# afn = AFN(nombreArchivo="testAFN.NFA")
+# afn.procesarListaCadenas(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
+# afn.procesarListaCadenasConversion(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
