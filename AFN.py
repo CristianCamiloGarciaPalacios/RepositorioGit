@@ -369,6 +369,6 @@ class AFN:
             selfnodo.next = []
             selfnodo.camino = camino
 
-# afn = AFN(nombreArchivo="testAFN.NFA")
-# afn.procesarListaCadenas(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
-# afn.procesarListaCadenasConversion(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
+afn = AFN(nombreArchivo="testAFN.NFA")
+afn.procesarListaCadenas(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
+afn.procesarListaCadenasConversion(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
