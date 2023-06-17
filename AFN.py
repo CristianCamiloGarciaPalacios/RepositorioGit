@@ -16,7 +16,7 @@ class AFN:
     def cargar_desde_archivo(self, nombreArchivo):
         self.alfabeto = []
         self.estados = []
-        self.estadoInicial = []
+        self.estadoInicial = None
         self.estadosAceptacion = []
         self.estadosInaccesibles = []
         self.delta = {}
@@ -38,8 +38,8 @@ class AFN:
                         i += 1
 
                 if lines[i].strip() == '#initial':
-                    self.estadoInicial.append(lines[i+1].strip())
-                    i += 1
+                        self.estadoInicial = lines[i+1].strip()
+                        i += 1 
 
                 if lines[i].strip() == '#accepting':
                     while lines[i+1].strip() != '#transitions':
@@ -54,13 +54,15 @@ class AFN:
                         target = target.split(';')
                         if source not in self.delta:
                             self.delta[source] = {}
-                        self.delta[source][letter] = target
+                        if letter not in self.delta[source]:
+                            self.delta[source][letter] = []
+                        self.delta[source][letter] += target
                         i += 1
 
     def hallarEstadosInaccesibles(self):
 
         estadosAccesibles = []
-        estadosAccesibles.append(self.estadoInicial[0])
+        estadosAccesibles.append(self.estadoInicial)
         while True:
             copiaEstadosAccesibles = estadosAccesibles.copy()
             for estado in estadosAccesibles:
@@ -83,7 +85,7 @@ class AFN:
         output += "#states\n"
         output += "\n".join(sorted(self.estados)) + "\n"
         output += "#initial\n"
-        output += str(self.estadoInicial[0]) + "\n"
+        output += str(self.estadoInicial) + "\n"
         output += "#accepting\n"
         output += "\n".join(sorted(self.estadosAceptacion)) + "\n"
         output += "#transitions\n"
@@ -106,7 +108,7 @@ class AFN:
             estados.remove(x)
         output += "\n".join(sorted(estados)) + "\n"
         output += "#initial\n"
-        output += str(self.estadoInicial[0]) + "\n"
+        output += str(self.estadoInicial) + "\n"
         output += "#accepting\n"
         output += "\n".join(sorted(self.estadosAceptacion)) + "\n"
         output += "#transitions\n"
@@ -130,7 +132,7 @@ class AFN:
 
     def AFNtoAFD(self, imprimirTabla=True):
         estadosAFD = []
-        estadoInicialAFD = '{'+self.estadoInicial[0]+'}'
+        estadoInicialAFD = '{'+self.estadoInicial+'}'
         deltaAFD = {}
         estadosAceptacionAFD = []
 
@@ -200,7 +202,7 @@ class AFN:
         return afd
 
     def procesarCadena(self, cadena=''):
-        estadosActuales = self.estadoInicial
+        estadosActuales = [self.estadoInicial]
         for caracter in cadena:
             siguientesEstados = []
             for estadoActual in estadosActuales:
@@ -218,7 +220,7 @@ class AFN:
 
     def procesar_cadena_con_detalles(self, cadena=''):
         inicio = self.nodo(
-            estado=self.estadoInicial[0], cadena=cadena, camino=self.estadoInicial[0])
+            estado=self.estadoInicial, cadena=cadena, camino=self.estadoInicial)
         self.generarCaminos(nodoActual=inicio)
 
         caminos = self.obtenerCaminos(nodoActual=inicio)
@@ -238,7 +240,7 @@ class AFN:
 
     def computarTodosLosProcesamientos(self, cadena='', nombreArchivo=''):
         inicio = self.nodo(
-            estado=self.estadoInicial[0], cadena=cadena, camino=self.estadoInicial[0])
+            estado=self.estadoInicial, cadena=cadena, camino=self.estadoInicial)
         self.generarCaminos(nodoActual=inicio)
 
         caminos = self.obtenerCaminos(nodoActual=inicio, imprimir=True)
@@ -302,7 +304,7 @@ class AFN:
             textoDeCadena += f'{cadena}\n'
 
             inicio = self.nodo(
-                estado=self.estadoInicial[0], cadena=cadena, camino=self.estadoInicial[0])
+                estado=self.estadoInicial, cadena=cadena, camino=self.estadoInicial)
             self.generarCaminos(nodoActual=inicio)
             caminos = self.obtenerCaminos(nodoActual=inicio)
             numeroDeProcesamientosDeAceptacion = 0
@@ -344,21 +346,19 @@ class AFN:
             if imprimirPantalla:
                 print(textoDeCadena)
                 print('------------------------')
-                print(f"Conteo 'si': {contador_si}")
-                print(f"Conteo 'no': {contador_no}")
         archivo.close()
         return contador_si, contador_no
 
     def procesarCadenaConversion(self, cadena=''):
-        afd = self.AFNtoAFD(imprimirTabla=False)
+        afd = self.AFNtoAFD()
         return afd.procesar_cadena(cadena=cadena)
 
     def procesarCadenaConDetallesConversion(self, cadena=''):
-        afd = self.AFNtoAFD(imprimirTabla=False)
+        afd = self.AFNtoAFD()
         return afd.procesar_cadena_con_detalles(cadena=cadena)
 
     def procesarListaCadenasConversion(self, listaCadenas=[], nombreArchivo='', imprimirPantalla=False):
-        afd = self.AFNtoAFD(imprimirTabla=False)
+        afd = self.AFNtoAFD()
         afd.procesarListaCadenas(
             listaCadenas=listaCadenas, nombreArchivo=nombreArchivo, imprimirPantalla=imprimirPantalla)
 
@@ -368,7 +368,5 @@ class AFN:
             selfnodo.cadena = cadena
             selfnodo.next = []
             selfnodo.camino = camino
-
-afn = AFN(nombreArchivo="testAFN.NFA")
-afn.procesarListaCadenas(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
-afn.procesarListaCadenasConversion(listaCadenas=['', 'a', 'b', 'ab', 'aa', 'ba', 'bb'], imprimirPantalla=True)
+afn = AFN(nombreArchivo='testAFN.NFA')
+afd = afn.AFNtoAFD()

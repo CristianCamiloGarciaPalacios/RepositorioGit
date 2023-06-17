@@ -15,6 +15,7 @@ class AFD:
             self.estadosInaccesibles = []
 
         #self.verificarCorregirCompletitud()
+        #self.hallarEstadosInaccesibles()
             
 
     def __str__(self):
@@ -121,7 +122,7 @@ class AFD:
         with open(nombreArchivo, 'r') as f:
             lines = f.readlines()
 
-            for i in range(len(lines)):
+            for i in range(len(lines)):  
                     if lines[i].strip() == '#alphabet':
                         letter_range = lines[i+1].strip()
                         start, end = letter_range.split('-')
@@ -205,10 +206,8 @@ class AFD:
 
                 if imprimirPantalla:
                     print(linea)
-        print(f"Conteo 'si': {contador_si}")
-        print(f"Conteo 'no': {contador_no}")
-            
-
+            return contador_si, contador_no 
+  
 
     def hallarComplemento(self):
         complemento = AFD()  
@@ -399,3 +398,50 @@ class AFD:
                 self.estadoInicial = self.combinar_estados(cluster)
             if any(estado in self.estadosAceptacion for estado in cluster):
                 self.estadosAceptacion = [self.combinar_estados(cluster) for cluster in clusters if any(estado in self.estadosAceptacion for estado in cluster)]
+
+
+
+
+       
+#afd = AFD(nombreArchivo='testAFD.DFA')
+#afd1 = AFD(nombreArchivo='evenA.DFA')
+#afd2 = AFD(nombreArchivo='evenB.DFA')
+#afd.verificarCorregirCompletitud()
+# afd.hallarEstadosInaccesibles()
+# afd.hallarEstadosLimbo()
+# print(afd)
+# afd.eliminar_estados_inaccesibles()
+
+# print(afd.imprimirAFDSimplificado())
+# afd.exportar('testAFD3.DFA')
+#graph = afd2.draw()
+#graph.view()
+#print(afd1.procesar_cadena('abaa'))
+#print(afd1.procesar_cadena_con_detalles('abbaaa'))
+# print(afd2.procesar_cadena_con_detalles('abbabaabbbbb'))
+# print(afd.procesar_cadena_con_detalles('aba'))
+
+# afd.procesarListaCadenas(['aba','abbaa'], 'resultados.txt', True)
+# print(afd.hallarComplemento())
+# print(afd.hallarProductoCartesianoY(afd1,afd2))
+# print(afd.hallarProductoCartesianoY(afd1,afd2).delta)
+# cartesianoY = afd.hallarProductoCartesianoY(afd1,afd2)
+
+#cartesianoO = afd.hallarProductoCartesianoDiferencia(afd1,afd2)
+# cartesionD = afd.hallarProductoCartesianoDiferenciaSimetrica(afd1,afd2)
+# print(cartesianoY.procesar_cadena_con_detalles('baababab'))
+# print(cartesianoO.procesar_cadena_con_detalles('aabbab'))
+# print(cartesionD.procesar_cadena_con_detalles('aaabbbb'))
+# cartesiano1 = afd.hallarProductoCartesiano(afd1,afd2, 'interseccion')
+# print(cartesiano1.procesar_cadena_con_detalles('aabbabab'))
+#afdmin = AFD(nombreArchivo='minTest.DFA')
+#afdmin.simplificarAFD()
+#print(afdmin)
+#afdmin.draw().view()
+
+
+
+
+
+
+

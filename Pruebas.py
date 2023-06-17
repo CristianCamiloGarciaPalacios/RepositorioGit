@@ -1,5 +1,8 @@
 from AFD import AFD
 from AFN import AFN
+from AFN_Lambda import AFN_Lambda
+from queue import LifoQueue
+from Alfabeto import Alfabeto
 import ast
 import random
 
@@ -9,8 +12,8 @@ class ClasePrueba:
     
     def probarAFD(self):
         # Crear autómatas AFD
-        afd1 = AFD(nombreArchivo='evenA.DFA')
-        
+        afd1 = AFD(nombreArchivo='AFDParAParB.txt')
+        #afd1 = AFD(afd1.alfabeto,afd1.estados,afd1.estadoInicial,afd1.estadosAceptacion,afd1.delta)
         # Procesar cadenas con y sin detalles
         cadena = 'aba'
         resultado_sin_detalles = afd1.procesar_cadena(cadena)
@@ -30,20 +33,21 @@ class ClasePrueba:
         nombre_archivo2 = 'resultado_sin_detalles.txt'
         afd1.exportar(nombre_archivo1)
         afd1.exportar(nombre_archivo2)
-      
-        
+        print(afd1)
    
 
     def ProbarAFN(self):
         
-        afn1 = AFN(nombreArchivo='testAFN.NFA')   
-
-        cadena = 'abbaa'
+        #afn1 = AFN(nombreArchivo='testAFN.NFA')   
+        afn1 = AFN(nombreArchivo='AFNTest.txt')
+        alfabeto = Alfabeto(afn1.alfabeto)
+        cadena = 'bbac'
         procesar_cadena = afn1.procesarCadena(cadena) 
         print(f"Procesamiento  de la cadena '{cadena}': {procesar_cadena}")
         procesar_cadena_detalle = afn1.procesar_cadena_con_detalles(cadena)
         procesamientos_posibles = afn1.computarTodosLosProcesamientos(cadena)
-        lista_cadenas = ['aba', 'abbaa', 'abbabaabbbbb']
+        #lista_cadenas = ['aba', 'abbaa', 'abbabaabbbbb']
+        lista_cadenas = [alfabeto.generar_cadena_aleatoria(3), alfabeto.generar_cadena_aleatoria(5), alfabeto.generar_cadena_aleatoria(10)]
         nombre_archivo = 'resultados_lista_de_cadenas.txt'
         imprimir_pantalla = True
         afn1.procesarListaCadenas(lista_cadenas, nombre_archivo, imprimir_pantalla)
@@ -55,17 +59,18 @@ class ClasePrueba:
 
     def probarAFNtoAFD(self):
          
-         afd1 = AFD(nombreArchivo='evenA.DFA')
-         afn1 = AFN(nombreArchivo='testAFN.NFA')   
-         cadena = 'abb'  
-         procesar_cadena_afd1 = afd1.procesar_cadena(cadena)
+         #afd1 = AFD(nombreArchivo='evenA.DFA')
+         #afn1 = AFN(nombreArchivo='testAFN.NFA')  
+         afn1 = AFN(nombreArchivo='conversionAFNtoAFDTest.txt')
+         cadena = '000'  
+         #procesar_cadena_afd1 = afd1.procesar_cadena(cadena)
          procesar_cadena_afn1 = afn1.procesarCadena(cadena)
-         print(f"\nProcesamiento  de la cadena '{cadena}':\n Procesamiento AFD: {procesar_cadena_afd1} \n Procesamiento AFN {procesar_cadena_afn1} \n")
          print("AFN a AFD")
          afn_afd = afn1.AFNtoAFD()
+         print(afn_afd)
          afd_nuevo_procesamiento = afn_afd.procesar_cadena(cadena)
-         print(f"\nProcesamiento  de la cadena '{cadena}':\n Procesamiento nuevo AFD: {afd_nuevo_procesamiento} \n Procesamiento AFN {procesar_cadena_afn1}")
-         
+         print(f"\nProcesamiento  de la cadena '{cadena}':\n Procesamiento AFN {procesar_cadena_afn1} \n Procesamiento nuevo AFD: {afd_nuevo_procesamiento} ")        
+    
     def probarComplemento(self):
         afd1 = AFD(nombreArchivo='evenA.DFA')
         afd_complemento = afd1.hallarComplemento()
@@ -93,8 +98,8 @@ class ClasePrueba:
         print(diferencia)
 
         # Dibujar el AFD resultante del producto cartesiano con intersección (∩)
-        print("\n\nDiagrama del Producto Cartesiano con Intersección:")
-        producto_cartesiano = afd1.hallarProductoCartesiano(union, diferencia, 'interseccion')
+        print("\n\nDiagrama del Producto Cartesiano de la Diferencia simetrica con la Interseccion:")
+        producto_cartesiano = afd1.hallarProductoCartesiano(interseccion, diferencia, 'interseccion')
         print(producto_cartesiano)
 
     def probarSimplificacion(self):
@@ -120,16 +125,59 @@ class ClasePrueba:
          afn1 = AFN(nombreArchivo='testAFN.NFA') 
          afns =[afn1]
          lista_cadenas = clase_prueba.generar_cadenas_afn(afns)
-         nombre_archivo = 'resultados_AFN_cedenas_aleatorias.txt'
          imprimir_pantalla = True
          print("Procesamiento AFN")
-         contador_si, contador_no = afn1.procesarListaCadenas(lista_cadenas, nombre_archivo, imprimir_pantalla)
+         contador_si_afn, contador_no_afn = afn1.procesarListaCadenas(lista_cadenas, 'resultados_AFN_cedenas_aleatorias.txt', imprimir_pantalla)
          print("AFN a AFD")
          afn_afd = afn1.AFNtoAFD()
-         nombre_archivo = 'resultados_AFNtoAFD_cedenas_aleatorias.txt'
-         print("Cantidad de cadenas aceptadas AFN :", contador_si)
-         print("Cantidad de cadenas rechazadas AFN:", contador_no)
-         #afn_afd.procesarListaCadenas(lista_cadenas, nombre_archivo, imprimir_pantalla)
+         contador_si_afd, contador_no_afd = afn_afd.procesarListaCadenas(lista_cadenas, 'resultados_AFNtoAFD_cedenas_aleatorias.txt', imprimir_pantalla)
+         print("Cantidad de cadenas aceptadas AFN :\n", contador_si_afn)
+         print("Cantidad de cadenas rechazadas AFN:\n", contador_no_afn)
+         print("Cantidad de cadenas aceptadas nuevo AFD :\n", contador_si_afd)
+         print("Cantidad de cadenas rechazadas nuevo AFD:\n", contador_no_afd)
+
+    def probarAFNLambda(self):
+    # Crear autómatas AFN-λ
+        #firstAFNL = AFN_Lambda(nombreArchivo="firstAFNLtest.NFE")
+        secondAFNL = AFN_Lambda(nombreArchivo="secondAFNLtest.NFE")
+        lambdaClosureAFNL = AFN_Lambda(nombreArchivo="lambdaClausuraTest.NFE")
+        #toStringTestAFNL = AFN_Lambda(nombreArchivo="toStringTestAFNL")
+
+        # Calcular la λ-clausura de un estado
+        lambdaClosureState = lambdaClosureAFNL.calcularLambdaClausura(states=['s0'])
+        print("Lambda clausura de 's0':", lambdaClosureState)
+
+        # Calcular la λλ-clausura de un conjunto de estados
+        lambdaClosureStates = lambdaClosureAFNL.calcularLambdaClausura(states=["s0", "s3"])
+        print("Lambda clausura de ['s0', 's3']:", lambdaClosureStates)
+
+        # Procesar cadenas mostrando solo un procesamiento de aceptación
+        print("Procesamiento de '01112012' en secondAFNL:")
+        result = secondAFNL.procesarCadena("01112012", True)
+        print("Aceptada:", result)
+
+        # Procesar cadenas mostrando todos los procesamientos posibles
+        print("Procesamientos detallado de '102' en secondAFNL:")
+        result = secondAFNL.procesarCadenaConDetalles("102")
+        print("Aceptada:", result)
+
+        # # Consultar los procesamientos de aceptación, abortados y de rechazo
+        print("Procesamiento de '2' en secondAFNL:")
+        result = secondAFNL.procesarCadena("2")
+        print("Aceptada:", result)
+
+        # # Procesar listas de cadenas
+        # cadenas = ["0111012", "2", "11"]
+        # for cadena in cadenas:
+        #     print("Procesamiento de", cadena, "en secondAFNL:")
+        #     result = secondAFNL.procesarCadena(cadena, True)
+        #     print("Aceptada:", result)
+
+        # # Generar archivos
+        # with open("toStringTestAFNL.NFE", "w") as file:
+        #     file.write(toStringTestAFNL.__str__())
+         
+    
 
 # Llamar a la función para probar el producto cartesiano
 
@@ -137,8 +185,9 @@ class ClasePrueba:
 clase_prueba = ClasePrueba()
 #clase_prueba.probarAFD()
 #clase_prueba.ProbarAFN()
-#clase_prueba.probarAFNtoAFD()
+clase_prueba.probarAFNtoAFD()
 #clase_prueba.probarComplemento()
 #clase_prueba.probarProductoCartesiano()
 #clase_prueba.probarSimplificacion()
-clase_prueba.afn_to_afd_aleatorio()
+#clase_prueba.afn_to_afd_aleatorio()
+#clase_prueba.probarAFNLambda()

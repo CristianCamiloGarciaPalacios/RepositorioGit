@@ -1,7 +1,0 @@
-	{s0}	no
-a	{s0},a --> {s1}	no
-b	{s0},b --> {}	no
-ab	{s0},a --> {s1},b --> {s2}	no
-aa	{s0},a --> {s1},a --> {s1,s3}	si
-ba	False	no
-bb	False	no
