@@ -26,11 +26,17 @@ class AFN:
 
             for i in range(len(lines)):
                 if lines[i].strip() == '#alphabet':
-                    letter_range = lines[i+1].strip()
-                    start, end = letter_range.split('-')
-                    self.alfabeto = [chr(x)
-                                     for x in range(ord(start), ord(end) + 1)]
-                    i += 1
+                    while lines[i+1].strip() != '#states':
+                        if '-' in lines[i+1].strip():
+                            start, end = lines[i+1].strip().split('-')
+                            for x in range(ord(start), ord(end) + 1):
+                                if chr(x) not in self.alfabeto:
+                                    self.alfabeto.append(chr(x))
+                        else:
+                            x = chr(ord(lines[i+1].strip()))
+                            if x not in self.alfabeto:
+                                self.alfabeto.append(x)
+                        i += 1
 
                 if lines[i].strip() == '#states':
                     while lines[i+1].strip() != '#initial':
@@ -81,7 +87,20 @@ class AFN:
     def __str__(self):
         output = "!NFA\n"
         output += "#alphabet\n"
-        output += f"{min(self.alfabeto)}-{max(self.alfabeto)}\n"
+        i = 0
+        while i in range(self.alfabeto.__len__()-1):
+            if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
+                output += self.alfabeto[i]+"-"
+                while True:
+                    if i+1 < self.alfabeto.__len__():
+                        if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
+                            i+=1
+                        else:
+                            break
+                    else:
+                        break
+            output += self.alfabeto[i]+"\n"
+            i += 1
         output += "#states\n"
         output += "\n".join(sorted(self.estados)) + "\n"
         output += "#initial\n"
@@ -138,7 +157,6 @@ class AFN:
 
         for estado in self.estados:
             estadosAFD.append(estado)
-
         while True:
             copiaEstadosAFD = estadosAFD.copy()
             for estado in estadosAFD:
@@ -149,7 +167,10 @@ class AFN:
                         for subEstado in estado.split(','):
                             if subEstado in self.delta:
                                 if caracter in self.delta[subEstado]:
-                                    transicion += self.delta[subEstado][caracter]
+                                    for estadoPasado in self.delta[subEstado][caracter]:
+                                        if estadoPasado not in transicion:
+                                            transicion.append(estadoPasado)
+                        transicion.sort()            
                         strTransicion = ''
                         for elemento in transicion:
                             strTransicion += elemento+','
@@ -157,6 +178,7 @@ class AFN:
                         deltaAFD[estado][caracter] = strTransicion
                         if not strTransicion in estadosAFD and strTransicion != '':
                             estadosAFD.append(strTransicion)
+
             if copiaEstadosAFD == estadosAFD:
                 break
 
@@ -178,8 +200,7 @@ class AFN:
 
         afd = AFD.AFD(alfabeto=self.alfabeto, estados=estadosAFD, estadoInicial=estadoInicialAFD,
                       estadosAceptacion=estadosAceptacionAFD, delta=deltaAFD)
-        afd.hallarEstadosInaccesibles()
-        afd.hallarEstadosLimbo()
+        
         if imprimirTabla:
             nuemeroDeEspacios = 5
             for estado in afd.estados:
@@ -192,13 +213,13 @@ class AFN:
             for caracter in afd.alfabeto:
                 print(caracter.center(nuemeroDeEspacios, " ")+'|', end='')
             print('')
-            for estado in afd.delta:
+            for estado in afd.estados:
                 print('|'+estado.center(nuemeroDeEspacios, " ")+'|', end='')
                 for caracter in afd.delta[estado]:
                     print(afd.delta[estado][caracter].center(
                         nuemeroDeEspacios, " ")+'|', end='')
                 print('')
-
+        afd.eliminar_estados_inaccesibles()
         return afd
 
     def procesarCadena(self, cadena=''):
@@ -369,4 +390,5 @@ class AFN:
             selfnodo.next = []
             selfnodo.camino = camino
 afn = AFN(nombreArchivo='testAFN.NFA')
-afd = afn.AFNtoAFD()
+print(afn)
+# afd = afn.AFNtoAFD()
