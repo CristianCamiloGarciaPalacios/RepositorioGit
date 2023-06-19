@@ -1,8 +1,7 @@
 #!NFA
 #alphabet
 a-d
-A-C
-X
+S
 w
 0-9
 #states

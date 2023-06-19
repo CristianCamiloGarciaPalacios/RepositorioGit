@@ -4,7 +4,6 @@ class AFN:
     def __init__(self, alfabeto=None, estados=None, estadoInicial=None, estadosAceptacion=None, delta=None, nombreArchivo=None):
         if nombreArchivo:
             self.cargar_desde_archivo(nombreArchivo)
-
         else:
             self.alfabeto = alfabeto
             self.estados = estados
@@ -88,17 +87,18 @@ class AFN:
         output = "!NFA\n"
         output += "#alphabet\n"
         i = 0
-        while i in range(self.alfabeto.__len__()-1):
-            if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
-                output += self.alfabeto[i]+"-"
-                while True:
-                    if i+1 < self.alfabeto.__len__():
-                        if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
-                            i+=1
+        while i in range(self.alfabeto.__len__()):
+            if i != self.alfabeto.__len__()-1:
+                if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
+                    output += self.alfabeto[i]+"-"
+                    while True:
+                        if i+1 < self.alfabeto.__len__():
+                            if ord(self.alfabeto[i+1]) == ord(self.alfabeto[i])+1:
+                                i+=1
+                            else:
+                                break
                         else:
                             break
-                    else:
-                        break
             output += self.alfabeto[i]+"\n"
             i += 1
         output += "#states\n"
