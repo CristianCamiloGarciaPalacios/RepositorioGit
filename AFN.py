@@ -244,26 +244,18 @@ class AFN:
         self.generarCaminos(nodoActual=inicio)
 
         caminos = self.obtenerCaminos(nodoActual=inicio)
-        aceptacion = False
         for camino in caminos:
             if camino[0] == 'ac':
-                aceptacion = True
                 print(camino[1])
-                break
-        if aceptacion == False:
-            caminoAImprimir = caminos[0][1]
-            for camino in caminos:
-                if camino[1].__len__() < caminoAImprimir.__len__():
-                    caminoAImprimir = camino[1]
-            print(caminoAImprimir)
-        return aceptacion
+                return True
+        return False
 
     def computarTodosLosProcesamientos(self, cadena='', nombreArchivo=''):
         inicio = self.nodo(
             estado=self.estadoInicial, cadena=cadena, camino=self.estadoInicial)
         self.generarCaminos(nodoActual=inicio)
 
-        caminos = self.obtenerCaminos(nodoActual=inicio, imprimir=True)
+        caminos = self.obtenerCaminos(nodoActual=inicio)
         archivoAceptadas = open(f'{nombreArchivo}Aceptadas.txt', 'w')
         archivoRechazadas = open(f'{nombreArchivo}Rechazadas.txt', 'w')
         archivoAbortadas = open(f'{nombreArchivo}Abortadas.txt', 'w')
@@ -274,6 +266,7 @@ class AFN:
                 archivoRechazadas.write(f"{camino[1]} \n")
             elif camino[0] == 'ab':
                 archivoAbortadas.write(f"{camino[1]} \n")
+            print(camino[1])
         archivoAceptadas.close()
         archivoRechazadas.close()
         archivoAbortadas.close()
@@ -285,34 +278,32 @@ class AFN:
                 if nodoActual.cadena[0] in self.delta[nodoActual.estado]:
                     for estadoTransicionado in self.delta[nodoActual.estado][nodoActual.cadena[0]]:
                         nodoActual.next.append(self.nodo(
-                            estado=estadoTransicionado, cadena=nodoActual.cadena[1:], camino=nodoActual.camino+f'--{nodoActual.cadena[0]}-->{estadoTransicionado}'))
+                            estado=estadoTransicionado, cadena=nodoActual.cadena[1:], camino=nodoActual.camino+f'[{nodoActual.estado},{nodoActual.cadena}]->'))
                     for nodoSiguiente in nodoActual.next:
                         self.generarCaminos(nodoSiguiente)
                 else:
-                    nodoActual.camino += f'--{nodoActual.cadena[0]}-->//'
+                    nodoActual.camino += f'[{nodoActual.estado},{nodoActual.cadena}]-> Abortado'
             else:
-                nodoActual.camino += f'--{nodoActual.cadena[0]}-->//'
+                nodoActual.camino += f'[{nodoActual.estado},{nodoActual.cadena}]-> Abortado'
+        else:
+            if nodoActual.estado in self.estadosAceptacion:
+                nodoActual.camino += f'[{nodoActual.estado},{nodoActual.cadena}]-> Aceptación'
+            else:
+                nodoActual.camino += f'[{nodoActual.estado},{nodoActual.cadena}]-> No aceptación'
 
-    def obtenerCaminos(self, nodoActual=None, imprimir=False):
+    def obtenerCaminos(self, nodoActual=None):
         if nodoActual.next == []:
-            if '//' in nodoActual.camino:
-                if imprimir:
-                    print(f'{nodoActual.camino} : abortado')
+            if nodoActual.cadena != '':
                 return [['ab', nodoActual.camino]]
             else:
                 if nodoActual.estado in self.estadosAceptacion:
-                    if imprimir:
-                        print(f'{nodoActual.camino} : aceptacion')
                     return [['ac', nodoActual.camino]]
                 else:
-                    if imprimir:
-                        print(f'{nodoActual.camino} : rechazo')
                     return [['re', nodoActual.camino]]
         else:
             caminos = []
             for siguienteNodo in nodoActual.next:
-                caminos += self.obtenerCaminos(
-                    nodoActual=siguienteNodo, imprimir=imprimir)
+                caminos += self.obtenerCaminos(nodoActual=siguienteNodo)
             return caminos
 
     def procesarListaCadenas(self, listaCadenas=[], nombreArchivo='', imprimirPantalla=False):

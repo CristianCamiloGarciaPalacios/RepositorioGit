@@ -144,13 +144,15 @@ class AFPN:
     def procesarCadena(self, cadena = ''):
         nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
         self.procesamiento(nodoInicial)
-        for aImprimir in self.cadenasImprimirProcesamientos(node=nodoInicial):
-            print(aImprimir)
+        retorno = False
+        for cadenaProsesamiento in self.cadenasProcesamientos(node=nodoInicial):
+            print(cadenaProsesamiento[-1:])
+        return retorno
     
-    def cadenasImprimirProcesamientos(self, node = None, cadenaProcesamiento = ''):
+    def cadenasProcesamientos(self, node = None, cadenaProcesamiento = ''):
         cadenasAImprimir = []
         aAgregar = cadenaProcesamiento+""
-        aAgregar += '('+node.estado+', '+node.cadena+', '
+        aAgregar += '('+node.estado+','+node.cadena+', '
         for i in node.pila:
             aAgregar += i
         aAgregar += ")->" 
@@ -158,7 +160,7 @@ class AFPN:
             if type(siguiente)==str:
                 cadenasAImprimir.append(aAgregar+siguiente)
             else:
-                for componente in self.cadenasImprimirProcesamientos(node= siguiente, cadenaProcesamiento=aAgregar):
+                for componente in self.cadenasProcesamientos(node= siguiente, cadenaProcesamiento=aAgregar):
                     cadenasAImprimir.append(componente)
         return cadenasAImprimir
 
