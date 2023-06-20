@@ -135,14 +135,83 @@ class AFPN:
         if operacion != parametro:
             if operacion == '$':
                 pila.append(parametro)
-            elif parametro == '$':
+            if parametro == '$':
                 pila.pop()
-            else:
+            if operacion != '$' and parametro != '$':
                 pila.pop()
                 pila.append(parametro)
-    # def procesarCadena(self, cadena = ''):
+    
+    def procesarCadena(self, cadena = ''):
+        nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
+        self.procesamiento(nodoInicial)
+        for aImprimir in self.cadenasImprimirProcesamientos(node=nodoInicial):
+            print(aImprimir)
+    
+    def cadenasImprimirProcesamientos(self, node = None, cadenaProcesamiento = ''):
+        cadenasAImprimir = []
+        aAgregar = cadenaProcesamiento+""
+        aAgregar += '('+node.estado+', '+node.cadena+', '
+        for i in node.pila:
+            aAgregar += i
+        aAgregar += ")->" 
+        for siguiente in node.next:
+            if type(siguiente)==str:
+                cadenasAImprimir.append(aAgregar+siguiente)
+            else:
+                for componente in self.cadenasImprimirProcesamientos(node= siguiente, cadenaProcesamiento=aAgregar):
+                    cadenasAImprimir.append(componente)
+        return cadenasAImprimir
+
+    def procesamiento(self, node = None):
+        if node.estado in self.delta:
+            if '$' in self.delta[node.estado]: # f(qn, $, x)
+                for operacion in self.delta[node.estado]['$']:
+                    for resultado in self.delta[node.estado]['$'][operacion]:
+                        subpila = node.pila.copy()
+                        if subpila.__len__() != 0:
+                            if subpila[-1] == operacion:
+                                self.modificarPila(pila = subpila, operacion=operacion, parametro=resultado[1])
+                                nuevoNodo = self.nodo(estado=resultado[0], cadena = node.cadena, pila = subpila)
+                                self.procesamiento(node=nuevoNodo)
+                                node.next.append(nuevoNodo)
+                        if operacion == '$':
+                            self.modificarPila(pila = subpila, operacion=operacion, parametro=resultado[1])
+                            nuevoNodo = self.nodo(estado=resultado[0], cadena = node.cadena, pila = subpila)
+                            self.procesamiento(node=nuevoNodo)
+                            node.next.append(nuevoNodo)
+            
+            if node.cadena != '':
+                if node.cadena[0] in self.delta[node.estado]: # f(qn, a, x)
+                    for operacion in self.delta[node.estado][node.cadena[0]]:
+                        for resultado in self.delta[node.estado][node.cadena[0]][operacion]:
+                            subpila = node.pila.copy()
+                            if subpila.__len__() != 0:
+                                if subpila[-1] == operacion:
+                                    self.modificarPila(pila = subpila, operacion=operacion, parametro=resultado[1])
+                                    nuevoNodo = self.nodo(estado = resultado[0], cadena = node.cadena[1:], pila = subpila)
+                                    self.procesamiento(node=nuevoNodo)
+                                    node.next.append(nuevoNodo)
+                            if operacion == '$':
+                                self.modificarPila(pila = subpila, operacion=operacion, parametro=resultado[1])
+                                nuevoNodo = self.nodo(estado = resultado[0], cadena = node.cadena[1:], pila = subpila)
+                                self.procesamiento(node=nuevoNodo)
+                                node.next.append(nuevoNodo)
+
+        if node.cadena == '' and node.pila.__len__() == 0:
+            if node.estado in self.estadosAceptacion:
+                node.next.append('aceptado')
+            else:
+                node.next.append('rechazado')
+
+        if node.next.__len__() == 0:
+                node.next.append('abortado')
 
 
-
-afpn = AFPN(nombreArchivo='testAFPN.pda')
-print(afpn)
+    class nodo:
+        def __init__(selfnodo, estado=None, cadena='', pila=None):
+            selfnodo.estado = estado
+            selfnodo.cadena = cadena
+            selfnodo.next = []
+            selfnodo.pila = pila
+afpn = AFPN(nombreArchivo="testAFPN.pda")
+afpn.procesarCadena('abba')

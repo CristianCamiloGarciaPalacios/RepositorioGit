@@ -11,12 +11,9 @@ a-b
 #stackAlphabet
 A
 B
-C
 #transitions
-q0:a:$>q0:A;q0:C
+q0:a:$>q0:A
 q0:b:$>q0:B
 q0:$:$>q1:$
 q1:a:A>q1:$
-q0:b:B>q1:$
-q1:a:C>q1:$
-q0:b:$>q1:B
+q1:b:B>q1:$

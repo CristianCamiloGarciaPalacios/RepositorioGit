@@ -65,7 +65,6 @@ class AFN:
                         i += 1
 
     def hallarEstadosInaccesibles(self):
-
         estadosAccesibles = []
         estadosAccesibles.append(self.estadoInicial)
         while True:
@@ -389,6 +388,4 @@ class AFN:
             selfnodo.cadena = cadena
             selfnodo.next = []
             selfnodo.camino = camino
-afn = AFN(nombreArchivo='testAFN.NFA')
-print(afn)
-# afd = afn.AFNtoAFD()
+# afn = AFN(nombreArchivo='testAFN.NFA')
