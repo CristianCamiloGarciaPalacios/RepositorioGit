@@ -1,4 +1,5 @@
 import AFD
+from graphviz import Digraph
 
 class AFN:
     def __init__(self, alfabeto=None, estados=None, estadoInicial=None, estadosAceptacion=None, delta=None, nombreArchivo=None):
@@ -361,17 +362,46 @@ class AFN:
         return contador_si, contador_no
 
     def procesarCadenaConversion(self, cadena=''):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         return afd.procesar_cadena(cadena=cadena)
 
     def procesarCadenaConDetallesConversion(self, cadena=''):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         return afd.procesar_cadena_con_detalles(cadena=cadena)
 
     def procesarListaCadenasConversion(self, listaCadenas=[], nombreArchivo='', imprimirPantalla=False):
-        afd = self.AFNtoAFD()
+        afd = self.AFNtoAFD(imprimirTabla=False)
         afd.procesarListaCadenas(
             listaCadenas=listaCadenas, nombreArchivo=nombreArchivo, imprimirPantalla=imprimirPantalla)
+        
+
+    def draw_nfa(automaton):
+        # Create a new directed graph
+        nfa = Digraph()
+        nfa.attr(rankdir='LR')
+
+        for estado in automaton.estados:
+            if estado in automaton.estadosAceptacion:
+                nfa.attr('node', shape='doublecircle')
+            else:
+                nfa.attr('node', shape='circle')
+            nfa.node(str(estado))
+
+        nfa.attr('node', shape='ellipse')
+
+        for source, transicion in automaton.delta.items():
+            for symbol, targets in transicion.items():
+                for target in targets:
+                    if target not in automaton.estadosInaccesibles:
+                        nfa.edge(str(source), str(target), label=str(symbol))
+
+        nfa.attr('node', style='invis', width='0')
+        nfa.node('start')
+        nfa.edge('start', str(automaton.estadoInicial), style='bold')
+
+        return nfa
+
+
 
     class nodo:
         def __init__(selfnodo, estado=None, cadena='', camino=''):
@@ -379,4 +409,3 @@ class AFN:
             selfnodo.cadena = cadena
             selfnodo.next = []
             selfnodo.camino = camino
-# afn = AFN(nombreArchivo='testAFN.NFA')

@@ -1,3 +1,6 @@
+import AFD
+from graphviz import Digraph
+
 class AFPN:
     def __init__(self, estados=None, estadoInicial=None, estadosAceptacion=None, alfabetoCinta=None, alfabetoPila=None, delta=None, nombreArchivo=None):
         if nombreArchivo:
@@ -131,6 +134,10 @@ class AFPN:
                     output += '\n'
         return output
     
+    def exportar(self, nombreArchivo = 'resultado_exportarAFPN.txt'):
+        with open(nombreArchivo, 'w') as f:
+            f.write(str(self))
+
     def modificarPila(self, pila = [], operacion = '', parametro = ''):
         if operacion != parametro:
             if operacion == '$':
@@ -145,14 +152,104 @@ class AFPN:
         nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
         self.procesamiento(nodoInicial)
         retorno = False
-        for cadenaProsesamiento in self.cadenasProcesamientos(node=nodoInicial):
-            print(cadenaProsesamiento[-1:])
+        for cadenaProcesamiento in self.cadenasProcesamientos(node=nodoInicial):
+            if (cadenaProcesamiento[-1:-9:-1])[::-1] == 'accepted':
+                retorno = True
+                break
         return retorno
+    
+    def procesarCadenaConDetalle(self, cadena = ''):
+        nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
+        self.procesamiento(nodoInicial)
+        retorno = False
+        for cadenaProcesamiento in self.cadenasProcesamientos(node=nodoInicial):
+            if (cadenaProcesamiento[-1:-9:-1])[::-1] == 'accepted':
+                print(cadenaProcesamiento)
+                retorno = True
+                break
+        if not retorno:
+            for cadenaProcesamiento in self.cadenasProcesamientos(node=nodoInicial):
+                print(cadenaProcesamiento)
+        return retorno
+    
+    def computarTodosLosProcesamientos(self, cadena = '', nombreArchivo = ''):
+        nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
+        self.procesamiento(nodoInicial)
+        cadenasProcesamientos = self.cadenasProcesamientos(node=nodoInicial)
+        procedimientosAceptados = []
+        procedimientosRechazados = []
+        print('TODOS LOS PROCESAMIENTOS:')
+        for procedimiento in cadenasProcesamientos:
+            print(procedimiento)
+            if (procedimiento[-1:-9:-1])[::-1] == 'accepted':
+                procedimientosAceptados.append(procedimiento)
+            else:
+                procedimientosRechazados.append(procedimiento)
+        archivoAceptadas = open(f'{nombreArchivo}AceptadasAFPN.txt', 'w')
+        archivoRechazadas = open(f'{nombreArchivo}RechazadasAFPN.txt', 'w')
+        print('PROCESAMIENTOS ACEPTADOS:')
+        for procedimientoAceptado in procedimientosAceptados:
+            print(procedimientoAceptado)
+            archivoAceptadas.write(f"{procedimientoAceptado} \n")
+        print('\nPROCESAMIENTOS RECHAZADOS:')
+        for procedimientoRechazado in procedimientosRechazados:
+            print(procedimientoRechazado)
+            archivoRechazadas.write(f"{procedimientoRechazado} \n")
+        print("")
+        archivoAceptadas.close()
+        archivoRechazadas.close()
+        return cadenasProcesamientos.__len__()
+
+    def procesarListaCadenas(self, listaCadenas = [], nombreArchivo = 'procesamientoListaDeCadenasAFPN', imprimirPantalla = True):
+        archivoListaCadenas = open(f'{nombreArchivo}.txt', 'w')
+        # cadena
+        # un procesamiento de aceptacion(si no, uno de rechazo)
+        # numero de posibles procesamientos
+        # numero de procesamientos de aceptacion
+        # numero de procesamientos de rechazo
+        # "yes" o "no" dependiendo de si la cadena es aceptada o rechazada
+        texto = ''
+        for cadena in listaCadenas:
+            texto += f'{cadena}    '
+            nodoInicial = self.nodo(estado = self.estadoInicial, cadena = cadena, pila = [])
+            self.procesamiento(nodoInicial)
+            cadenasProcesamientos = self.cadenasProcesamientos(node=nodoInicial)
+            camino = ''
+            for procesamiento in cadenasProcesamientos:
+                camino = procesamiento
+                if (procesamiento[-1:-9:-1])[::-1] == 'accepted':
+                    break
+            texto += f'{camino}    '
+            texto += f'{cadenasProcesamientos.__len__()}    '
+            numeroAceptacion = 0
+            numeroRechazo = 0
+            for procesamiento in cadenasProcesamientos:
+                if (procesamiento[-1:-9:-1])[::-1] == 'accepted':
+                    numeroAceptacion += 1
+                else:
+                    numeroRechazo += 1
+            texto += f'{numeroAceptacion}    '
+            texto += f'{numeroRechazo}    '
+            if numeroAceptacion > 0:
+                texto += 'yes    '
+            else:
+                texto += 'no    '
+            texto += '\n\n'
+        if imprimirPantalla:
+            print(texto)
+        archivoListaCadenas.write(texto)
+        archivoListaCadenas.close()
     
     def cadenasProcesamientos(self, node = None, cadenaProcesamiento = ''):
         cadenasAImprimir = []
         aAgregar = cadenaProcesamiento+""
-        aAgregar += '('+node.estado+','+node.cadena+', '
+        aAgregar += '('+node.estado+','
+        if node.cadena == '':
+            aAgregar += '$,'
+        else:
+            aAgregar += node.cadena+','
+        if node.pila.__len__() == 0:
+            aAgregar += '$'
         for i in node.pila:
             aAgregar += i
         aAgregar += ")->" 
@@ -176,7 +273,7 @@ class AFPN:
                                 nuevoNodo = self.nodo(estado=resultado[0], cadena = node.cadena, pila = subpila)
                                 self.procesamiento(node=nuevoNodo)
                                 node.next.append(nuevoNodo)
-                        if operacion == '$':
+                        if operacion == '$': # f(qn, $, $)
                             self.modificarPila(pila = subpila, operacion=operacion, parametro=resultado[1])
                             nuevoNodo = self.nodo(estado=resultado[0], cadena = node.cadena, pila = subpila)
                             self.procesamiento(node=nuevoNodo)
@@ -201,13 +298,64 @@ class AFPN:
 
         if node.cadena == '' and node.pila.__len__() == 0:
             if node.estado in self.estadosAceptacion:
-                node.next.append('aceptado')
+                node.next.append('accepted')
             else:
-                node.next.append('rechazado')
+                node.next.append('rejected')
 
         if node.next.__len__() == 0:
-                node.next.append('abortado')
+                node.next.append('rejected')
 
+    def hallarProductoCartesianoConAFD(self, afd = AFD.AFD()):
+        # el alfabeto de cinta es el mismo, y el de pila es el del afpn
+        productoEstados = []
+        productoEstadoInicial = '{'+self.estadoInicial+','+afd.estadoInicial+'}'
+        procutoEstadosAceptacion = []
+        productoDelta = {}
+        estadosAFD = afd.estados.copy()
+        if 'limbo' in estadosAFD:
+            estadosAFD.remove('limbo')
+        for estadoAfpn in self.estados:
+            for estadoAfd in estadosAFD:
+                estadoResultante = '{'+estadoAfpn+','+estadoAfd+'}'
+                productoEstados.append(estadoResultante)
+                if estadoAfpn in self.estadosAceptacion and estadoAfd in afd.estadosAceptacion:
+                    procutoEstadosAceptacion.append(estadoResultante)
+                alfabetoSimbolos = self.alfabetoCinta.copy()
+                alfabetoSimbolos.append('$')
+                for simbolo in alfabetoSimbolos:
+                    if self.existeTransicionAFPN(estado=estadoAfpn, caracter= simbolo) or self.existeTransicionAFD(estado = estadoAfd, caracter = simbolo, delta = afd.delta):
+                        if estadoResultante not in productoDelta:
+                            productoDelta[estadoResultante] = {}
+                        if simbolo not in productoDelta[estadoResultante]:
+                            productoDelta[estadoResultante][simbolo] = {}
+                    if self.existeTransicionAFPN(estado=estadoAfpn, caracter= simbolo) and self.existeTransicionAFD(estado = estadoAfd, caracter = simbolo, delta = afd.delta):
+                        for simboloPila in self.delta[estadoAfpn][simbolo]:
+                            productoDelta[estadoResultante][simbolo][simboloPila] = []
+                            for resultado in self.delta[estadoAfpn][simbolo][simboloPila]:
+                                productoDelta[estadoResultante][simbolo][simboloPila].append(['{'+resultado[0]+','+afd.delta[estadoAfd][simbolo]+'}', resultado[1]])
+                    if not self.existeTransicionAFPN(estado=estadoAfpn, caracter= simbolo) and self.existeTransicionAFD(estado = estadoAfd, caracter = simbolo, delta = afd.delta):
+                        productoDelta[estadoResultante][simbolo]['$'].append(['{'+estadoAfpn+','+afd.delta[estadoAfd][simbolo]+'}', '$'])
+                    if self.existeTransicionAFPN(estado=estadoAfpn, caracter= simbolo) and not self.existeTransicionAFD(estado = estadoAfd, caracter = simbolo, delta = afd.delta):
+                        for simboloPila in self.delta[estadoAfpn][simbolo]:
+                            productoDelta[estadoResultante][simbolo][simboloPila] = []
+                            for resultado in self.delta[estadoAfpn][simbolo][simboloPila]:
+                                productoDelta[estadoResultante][simbolo][simboloPila].append(['{'+resultado[0]+','+estadoAfd+'}', resultado[1]])
+        return AFPN(estados=productoEstados, estadoInicial=productoEstadoInicial, estadosAceptacion=procutoEstadosAceptacion, alfabetoCinta=self.alfabetoCinta, alfabetoPila=self.alfabetoPila, delta=productoDelta)
+        
+    def existeTransicionAFPN(self, estado = '', caracter = ''):
+        hayTransicion = False
+        if estado in self.delta:
+            if caracter in self.delta[estado]:
+                hayTransicion = True
+        return hayTransicion
+    
+    def existeTransicionAFD(self, estado = '', caracter = '', delta = {}):
+        hayTransicion = False
+        if estado in delta:
+            if caracter in delta[estado]:
+                if delta[estado][caracter] != 'limbo':
+                    hayTransicion = True
+        return hayTransicion
 
     class nodo:
         def __init__(selfnodo, estado=None, cadena='', pila=None):
@@ -215,5 +363,29 @@ class AFPN:
             selfnodo.cadena = cadena
             selfnodo.next = []
             selfnodo.pila = pila
-afpn = AFPN(nombreArchivo="testAFPN.pda")
-afpn.procesarCadena('abba')
+
+    def draw_npfa(automaton):
+        # Create a new directed graph
+        npfa = Digraph()
+        npfa.attr(rankdir='LR')
+
+        for estado in automaton.estados:
+            if estado in automaton.estadosAceptacion:
+                npfa.attr('node', shape='doublecircle')
+            else:
+                npfa.attr('node', shape='circle')
+            npfa.node(str(estado))
+
+        npfa.attr('node', shape='ellipse')
+
+        for estado in automaton.delta:
+            for simbolo in automaton.delta[estado]:
+                for proceso in automaton.delta[estado][simbolo]:
+                    for resultado in automaton.delta[estado][simbolo][proceso]:
+                            npfa.edge(str(estado), str(resultado[0]), label=f'{simbolo}, {proceso}|{resultado[1]}')
+
+        npfa.attr('node', style='invis', width='0')
+        npfa.node('start')
+        npfa.edge('start', str(automaton.estadoInicial), style='bold')
+
+        return npfa

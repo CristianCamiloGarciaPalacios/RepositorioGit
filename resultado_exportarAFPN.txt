@@ -1,4 +1,4 @@
-#!pda
+!pda
 #states
 q0
 q1
@@ -10,14 +10,11 @@ q0
 #tapeAlphabet
 a-b
 #stackAlphabet
-A
-B
+A-B
 #transitions
 q0:a:$>q1:A
 q0:b:$>q2:B
 q1:a:$>q1:A
-q1:b:A>q1:$
-q1:b:A>q0:$
+q1:b:A>q1:$;q0:$
 q2:b:$>q2:B
-q2:a:B>q2:$
-q2:a:B>q0:$
+q2:a:B>q2:$;q0:$
